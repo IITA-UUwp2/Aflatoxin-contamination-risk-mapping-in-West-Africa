@@ -5,7 +5,7 @@ All work completed during our IITA internship is tracked here,so progress is eas
 ## Contributors
 
 - **[agness/](./agness)** — Agness Chisale — GEOAI Aflatoxin Early Warning System (ML-based aflatoxin risk prediction for Nigeria)
-- **[Alex/](./Alex)** — Alex 
+- **[Alex/](./Alex)** — Alex - All the projects that will be conducted by Alex will be updated here
 
 ## Structure
 
