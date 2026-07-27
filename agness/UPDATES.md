@@ -3,7 +3,16 @@
 
 
 ### 2026-07-27
-
+- Started Step 2 of the workflow: GEE raster preparation, independent of the still-blocked point dataset restart.
+- Reviewed Stella's older GEE variable-extraction code as a reference. 
+- Built a GEE script for AEZ-based growing-season precipitation extraction from ERA5-Land:
+  - Uses the AEZ growing-season table (Francis/Tofa) to determine which months to pull per zone.
+  - Produces both monthly bands (one per growing-season month, per AEZ, per year) and a seasonal aggregate band (one per AEZ, per year).
+  - Debugged several script issues along the way (case-sensitivity typos, misplaced export call, AEZ name spelling mismatches).
+- Hit and resolved a GEE export payload size limit by restructuring the script to build and export one GeoTIFF per sample year (7 files: 2012, 2013, 2015, 2016, 2017, 2018, 2024) instead of one combined file.
+- Verified the 2024 output in ArcGIS Pro: raster values are correctly clipped to each AEZ zone's boundary, and values are physically sensible once accounting for ERA5-Land's precipitation units (meters, not millimeters).
+- Next: replicate this pattern for the remaining predictor variables (VPD, temperature, soil moisture, etc.)
+- -Added the generated .tif files to the git repo
 
 
 ### 2026-07-24
