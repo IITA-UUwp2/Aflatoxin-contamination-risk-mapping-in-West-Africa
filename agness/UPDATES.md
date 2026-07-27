@@ -7,11 +7,10 @@
 
 
 ### 2026-07-24
-- Redid the AEZ and State spatial join independently (using the actual AEZ shapefile and a GADM Nigeria states boundary), and got identical gaps to the original join — confirms this is a genuine data issue, not a join bug.
+- Redid the AEZ and State spatial join independently (using the actual AEZ shapefile and a GADM Nigeria states boundary) and got identical gaps to the original join.  
 - 26 codes have no AEZ match; 6 of those also have no State match.
 - Resolved the 6 missing-State codes manually via LGA lookup (Jibia → Katsina State; Bosso → Niger State).
-- The remaining 26 AEZ-missing codes are mostly Niger Delta coastal/market towns (Bonny, Abonema, Akuku-Toru) and Lagos coastal LGAs (Ibeju-Lekki, Eti-Osa, Lekki, Amuwo Odofin) — may not be legitimate farm samples at all.
-
+- The remaining 26 AEZ-missing codes are mostly Niger Delta coastal/market towns (Bonny, Abonema, Akuku-Toru) and Lagos coastal LGAs (Ibeju-Lekki, Eti-Osa, Lekki, Amuwo Odofin)
 
 ### 2026-07-23
 - Restarted the cleaning process from the original raw dataset
