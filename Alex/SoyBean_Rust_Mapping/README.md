@@ -30,7 +30,7 @@ This map provides a continental-scale view of the distribution of the old and ne
 
 ### Soybean Rust Samples – Africa
 
-[📄 View the Soybean Rust Samples Africa Map (PDF)](maps/Soybean%20Rust%20Samples%20Africa.pdf)
+[📄 View the Soybean Rust Samples Africa Map (PDF)](Alex/SoyBean_Rust_Mapping/Soybean Rust Samples Africa.pdf)
 
 ### Soybean Rust Samples – East and Southern Africa
 
