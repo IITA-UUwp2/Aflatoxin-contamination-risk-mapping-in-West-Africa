@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghana Aflatoxin Field Monitor</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  :root{
+    --ink:#1f2420;
+    --paper:#f6f4ee;
+    --panel:#ffffff;
+    --line:#d9d4c6;
+    --maize:#d99a2b;
+    --maize-dark:#9c6c14;
+    --groundnut:#7a4a2b;
+    --groundnut-dark:#4f2f19;
+    --accent:#2f6f5e;
+    --muted:#6b6459;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--ink);background:var(--paper);}
+
+  #app{display:flex;flex-direction:column;height:100vh;}
+
+  header{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:12px 20px;background:var(--ink);color:var(--paper);
+    border-bottom:3px solid var(--maize);
+    flex-shrink:0;
+  }
+  header .title-block h1{
+    font-size:18px;margin:0;letter-spacing:.3px;font-weight:600;
+  }
+  header .title-block p{
+    margin:2px 0 0;font-size:12px;color:#c9c3b2;
+  }
+  header .stats{display:flex;gap:18px;font-size:12px;color:#c9c3b2;}
+  header .stats b{color:#fff;font-size:15px;display:block;font-weight:600;}
+
+  #main{flex:1;display:flex;min-height:0;position:relative;}
+
+  #sidebar{
+    width:220px;flex-shrink:0;background:var(--panel);
+    border-right:1px solid var(--line);
+    padding:16px;overflow-y:auto;
+  }
+  #sidebar h3{
+    font-size:11px;text-transform:uppercase;letter-spacing:.08em;
+    color:var(--muted);margin:0 0 10px;
+  }
+  .crop-toggle{
+    display:flex;align-items:center;gap:8px;padding:8px 10px;
+    border:1px solid var(--line);border-radius:6px;margin-bottom:8px;
+    cursor:pointer;background:var(--paper);transition:.15s;user-select:none;
+  }
+  .crop-toggle:hover{border-color:var(--accent);}
+  .crop-toggle input{accent-color:var(--accent);width:15px;height:15px;}
+  .swatch{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+  .crop-toggle .label{font-size:13px;font-weight:500;flex:1;}
+  .crop-toggle .count{font-size:11px;color:var(--muted);}
+
+  #sidebar hr{border:none;border-top:1px solid var(--line);margin:16px 0;}
+
+  .field{margin-bottom:10px;}
+  .field label{font-size:11px;color:var(--muted);display:block;margin-bottom:4px;}
+  .field select{
+    width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:6px;
+    font-size:12px;background:#fff;color:var(--ink);
+  }
+
+  #hint{
+    margin-top:18px;font-size:11.5px;color:var(--muted);line-height:1.5;
+    padding:10px;background:var(--paper);border-radius:6px;border:1px dashed var(--line);
+  }
+
+  #map{flex:1;background:#e8e5db;}
+
+  .leaflet-popup-content-wrapper{border-radius:6px;}
+
+  /* Detail panel */
+  #detail{
+    position:absolute;top:0;right:-380px;width:380px;height:100%;
+    background:var(--panel);border-left:1px solid var(--line);
+    box-shadow:-4px 0 16px rgba(0,0,0,.08);
+    transition:right .25s ease;
+    display:flex;flex-direction:column;z-index:1000;
+  }
+  #detail.open{right:0;}
+  #detail-header{
+    padding:14px 16px;border-bottom:1px solid var(--line);
+    display:flex;justify-content:space-between;align-items:flex-start;
+    gap:8px;flex-shrink:0;
+  }
+  #detail-header .crop-badge{
+    display:inline-block;font-size:10px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.05em;padding:2px 8px;border-radius:10px;color:#fff;margin-bottom:6px;
+  }
+  #detail-header h2{font-size:15px;margin:0;}
+  #detail-header .meta{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.5;}
+  #detail-close{
+    background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);
+    line-height:1;padding:2px 6px;border-radius:4px;
+  }
+  #detail-close:hover{background:var(--paper);color:var(--ink);}
+
+  #detail-body{flex:1;overflow:auto;padding:14px 16px;}
+  #detail-body h4{
+    font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);
+    margin:0 0 8px;
+  }
+  table.attr-table{border-collapse:collapse;width:100%;font-size:11.5px;}
+  table.attr-table th, table.attr-table td{
+    padding:5px 7px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;
+  }
+  table.attr-table th{
+    background:var(--paper);position:sticky;top:0;font-weight:600;
+  }
+  table.attr-table th.attr-name{position:sticky;left:0;background:var(--paper);z-index:2;}
+  table.attr-table td.attr-name{
+    position:sticky;left:0;background:#fff;font-weight:500;color:var(--muted);z-index:1;
+  }
+  #detail-table-wrap{overflow:auto;max-height:calc(100vh - 220px);border:1px solid var(--line);border-radius:6px;}
+
+  .site-marker{border-radius:50%;border:2px solid rgba(255,255,255,.9);box-shadow:0 0 0 1px rgba(0,0,0,.15);}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title-block">
+      <h1>Ghana Aflatoxin Field Monitor</h1>
+      <p>Maize &amp; groundnut sample sites — click a point for full attribute data</p>
+    </div>
+    <div class="stats">
+      <div><b id="stat-sites">0</b>sites</div>
+      <div><b id="stat-records">0</b>readings</div>
+    </div>
+  </header>
+
+  <div id="main">
+    <div id="sidebar">
+      <h3>Crop layers</h3>
+      <label class="crop-toggle" for="toggle-maize">
+        <input type="checkbox" id="toggle-maize" checked>
+        <span class="swatch" style="background:var(--maize);"></span>
+        <span class="label">Maize</span>
+        <span class="count" id="count-maize">0</span>
+      </label>
+      <label class="crop-toggle" for="toggle-groundnut">
+        <input type="checkbox" id="toggle-groundnut" checked>
+        <span class="swatch" style="background:var(--groundnut);"></span>
+        <span class="label">Groundnut</span>
+        <span class="count" id="count-groundnut">0</span>
+      </label>
+
+      <hr>
+
+      <h3>Filter</h3>
+      <div class="field">
+        <label for="filter-region">Region</label>
+        <select id="filter-region"><option value="">All regions</option></select>
+      </div>
+
+      <div id="hint">
+        Basemap options are in the layer switcher, top-right of the map. Each marker is one field site; sites with several monthly readings show every reading side-by-side when clicked.
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div id="detail">
+      <div id="detail-header">
+        <div>
+          <span class="crop-badge" id="detail-badge">Maize</span>
+          <h2 id="detail-title">Site</h2>
+          <div class="meta" id="detail-meta"></div>
+        </div>
+        <button id="detail-close">&times;</button>
+      </div>
+      <div id="detail-body">
+        <h4 id="detail-subtitle">Readings</h4>
+        <div id="detail-table-wrap">
+          <table class="attr-table" id="detail-table"></table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="data.js"></script>
+<script>
+const COLORS = {
+  Maize: { fill: '#d99a2b', dark: '#9c6c14' },
+  Groundnut: { fill: '#7a4a2b', dark: '#4f2f19' },
+  Unknown: { fill: '#6b6459', dark: '#3a352d' }
+};
+
+// ---- Map + basemaps ----
+const map = L.map('map', { zoomControl: true }).setView([7.9, -1.1], 7);
+
+const baseOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+});
+const baseSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri', maxZoom: 19
+});
+const baseTopo = L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+  attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', maxZoom: 17
+});
+const baseLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 19, subdomains: 'abcd'
+});
+const baseDark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  attribution: '&copy; OpenStreetMap contributors &copy; CARTO', maxZoom: 19, subdomains: 'abcd'
+});
+
+baseOSM.addTo(map);
+
+const baseLayers = {
+  'Streets (OSM)': baseOSM,
+  'Satellite (Esri)': baseSatellite,
+  'Terrain (OpenTopoMap)': baseTopo,
+  'Light (Carto Positron)': baseLight,
+  'Dark (Carto Dark Matter)': baseDark
+};
+L.control.layers(baseLayers, null, { collapsed: false, position: 'topright' }).addTo(map);
+
+// ---- Marker layers ----
+const layerMaize = L.layerGroup().addTo(map);
+const layerGroundnut = L.layerGroup().addTo(map);
+const allBounds = [];
+
+let countMaize = 0, countGroundnut = 0, totalRecords = 0;
+const regions = new Set();
+
+function markerFor(site){
+  const c = COLORS[site.sampleType] || COLORS.Unknown;
+  const nRecords = site.records.length;
+  const radius = 5 + Math.min(nRecords, 12) * 0.6;
+  return L.circleMarker([site.lat, site.lon], {
+    radius: radius,
+    fillColor: c.fill,
+    color: c.dark,
+    weight: 1.5,
+    fillOpacity: 0.85,
+    className: 'site-marker'
+  });
+}
+
+SITE_DATA.forEach(site => {
+  const marker = markerFor(site);
+  const group = site.sampleType === 'Maize' ? layerMaize : layerGroundnut;
+  marker.addTo(group);
+  allBounds.push([site.lat, site.lon]);
+
+  marker.bindTooltip(
+    `${site.sampleType || 'Unknown'} — ${site.village || site.district || ''} (${site.records.length} reading${site.records.length>1?'s':''})`,
+    { direction: 'top', sticky: true }
+  );
+
+  marker.on('click', () => showDetail(site));
+
+  if (site.sampleType === 'Maize') countMaize++;
+  else countGroundnut++;
+  totalRecords += site.records.length;
+  if (site.region) regions.add(site.region);
+});
+
+if (allBounds.length) map.fitBounds(allBounds, { padding: [30,30] });
+
+document.getElementById('stat-sites').textContent = SITE_DATA.length;
+document.getElementById('stat-records').textContent = totalRecords;
+document.getElementById('count-maize').textContent = countMaize;
+document.getElementById('count-groundnut').textContent = countGroundnut;
+
+// ---- Region filter ----
+const regionSelect = document.getElementById('filter-region');
+[...regions].sort().forEach(r => {
+  const opt = document.createElement('option');
+  opt.value = r; opt.textContent = r;
+  regionSelect.appendChild(opt);
+});
+regionSelect.addEventListener('change', applyFilters);
+
+function applyFilters(){
+  const region = regionSelect.value;
+  layerMaize.clearLayers();
+  layerGroundnut.clearLayers();
+  SITE_DATA.forEach(site => {
+    if (region && site.region !== region) return;
+    const marker = markerFor(site);
+    const group = site.sampleType === 'Maize' ? layerMaize : layerGroundnut;
+    marker.addTo(group);
+    marker.bindTooltip(
+      `${site.sampleType || 'Unknown'} — ${site.village || site.district || ''} (${site.records.length} reading${site.records.length>1?'s':''})`,
+      { direction: 'top', sticky: true }
+    );
+    marker.on('click', () => showDetail(site));
+  });
+}
+
+// ---- Crop toggles ----
+document.getElementById('toggle-maize').addEventListener('change', e => {
+  if (e.target.checked) map.addLayer(layerMaize); else map.removeLayer(layerMaize);
+});
+document.getElementById('toggle-groundnut').addEventListener('change', e => {
+  if (e.target.checked) map.addLayer(layerGroundnut); else map.removeLayer(layerGroundnut);
+});
+
+// ---- Detail panel ----
+const detailPanel = document.getElementById('detail');
+const detailBadge = document.getElementById('detail-badge');
+const detailTitle = document.getElementById('detail-title');
+const detailMeta = document.getElementById('detail-meta');
+const detailSubtitle = document.getElementById('detail-subtitle');
+const detailTable = document.getElementById('detail-table');
+
+document.getElementById('detail-close').addEventListener('click', () => {
+  detailPanel.classList.remove('open');
+});
+
+// Attribute key order (skip the ones already shown in the header)
+const HEADER_SKIP = new Set(['Sample Code','Sample Type','Latitude','Longitude','Region','District','Village','AEZ','Elevation (ft)']);
+
+function showDetail(site){
+  const c = COLORS[site.sampleType] || COLORS.Unknown;
+  detailBadge.textContent = site.sampleType || 'Unknown';
+  detailBadge.style.background = c.dark;
+  detailTitle.textContent = site.sampleCode || site.village || 'Site';
+  detailMeta.innerHTML = [
+    site.village, site.district, site.region
+  ].filter(Boolean).join(', ') +
+  (site.aez ? `<br>AEZ: ${site.aez}` : '') +
+  (site.elevation != null ? `<br>Elevation: ${site.elevation} ft` : '') +
+  `<br>${site.lat.toFixed(5)}, ${site.lon.toFixed(5)}`;
+
+  detailSubtitle.textContent = `Readings (${site.records.length})`;
+
+  // Build transposed table: rows = attributes, columns = each monthly record
+  const recs = site.records;
+  const keys = [];
+  const seen = new Set();
+  recs.forEach(r => Object.keys(r).forEach(k => {
+    if (!HEADER_SKIP.has(k) && !seen.has(k)) { seen.add(k); keys.push(k); }
+  }));
+
+  let html = '<thead><tr><th class="attr-name">Attribute</th>';
+  recs.forEach(r => {
+    const label = r.Month ? `${r.Month.slice(0,3)} ${r.Year || ''}` : (r.Year || `#${recs.indexOf(r)+1}`);
+    html += `<th>${label}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  keys.forEach(k => {
+    html += `<tr><td class="attr-name">${k}</td>`;
+    recs.forEach(r => {
+      let v = r[k];
+      if (typeof v === 'number' && !Number.isInteger(v)) v = v.toFixed(3);
+      html += `<td>${v === null || v === undefined ? '—' : v}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  detailTable.innerHTML = html;
+
+  detailPanel.classList.add('open');
+}
+</script>
+</body>
+</html>
