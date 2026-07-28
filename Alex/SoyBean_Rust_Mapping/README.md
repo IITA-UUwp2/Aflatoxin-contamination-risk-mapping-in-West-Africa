@@ -28,10 +28,5 @@ This map shows the spatial distribution of the old and new soybean rust collecti
 This map provides a continental-scale view of the distribution of the old and new soybean rust collection points across Africa.
 ## Maps
 
-### Soybean Rust Samples – Africa
 
-[📄 View the Soybean Rust Samples Africa Map (PDF)](Alex/SoyBean_Rust_Mapping/Soybean Rust Samples Africa.pdf)
 
-### Soybean Rust Samples – East and Southern Africa
-
-[📄 View the Soybean Rust Samples East-Southern Africa Map (PDF)](maps/Soybean%20Rust%20Samples%20East-Southern%20Africa.pdf)
