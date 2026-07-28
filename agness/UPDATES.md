@@ -12,7 +12,17 @@
 - Hit and resolved a GEE export payload size limit by restructuring the script to build and export one GeoTIFF per sample year (7 files: 2012, 2013, 2015, 2016, 2017, 2018, 2024) instead of one combined file.
 - Verified the 2024 output in ArcGIS Pro: raster values are correctly clipped to each AEZ zone's boundary, and values are physically sensible once accounting for ERA5-Land's precipitation units (meters, not millimeters).
 - Next: replicate this pattern for the remaining predictor variables (VPD, temperature, soil moisture, etc.)
-- -Added the generated .tif files to the git repo
+
+***Added .tif files for precipitation***
+File naming: precip_growing_season_AEZ_<year>.tif , one file per sample year (2012, 2013, 2015, 2016, 2017, 2018, 2024).
+What's inside each file: a single multi-band raster covering all of Nigeria at 9km resolution, where each band represents one specific (AEZ zone × time period) combination for that file's year. Two types of bands exist:
+1. Monthly bands :one per month that falls within a given AEZ's growing season, for that year. Band name pattern:
+   precip_<AEZname>_<year>_m<monthNumber>
+Example: precip_HumidForest_2018_m5 = total precipitation (mm) in the Humid Forest zone, May 2018, summed across the month.
+
+2. Seasonal bands: one per AEZ, summarizing the entire growing season as a single total. Band name pattern:
+   precip_<AEZname>_<year>_seasonal
+Example: precip_HumidForest_2018_seasonal = total precipitation (mm) across Humid Forest's entire growing season (March–December) in 2018.
 
 
 ### 2026-07-24
