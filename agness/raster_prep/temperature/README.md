@@ -1,4 +1,4 @@
-# Max/Min Temperature Rasters — Growing Season, by AEZ
+# Max/Min Temperature Rasters: Growing Season, by AEZ
 
 ## What this data is
 
