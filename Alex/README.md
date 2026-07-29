@@ -1,6 +1,6 @@
-# Alex's work during his time at IITA
+# Alex Nyaga's work during his time at IITA
 
 ## Contents 
-- **Each file contains different tasks/project
+- Each file contains different tasks/project
 
 
