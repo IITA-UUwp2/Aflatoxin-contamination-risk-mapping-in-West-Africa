@@ -1,7 +1,14 @@
-# Daily Updates — Agness
+# Daily Updates 
 
+### 2026-07-28
 
-
+- Built, debugged, and ran the GEE script for AEZ-based growing-season precipitation extraction from ERA5-Land, monthly bands per growing-season month plus one seasonal aggregate band, per AEZ, per sample year. Restructured the export to run per-year (instead of one combined export) to resolve a GEE payload-size limit error.
+- Verified the 2024 precipitation output in ArcGIS Pro,values correctly clipped per AEZ zone and physically sensible. Found ERA5-Land's native precipitation units are in meters; decided to convert precipitation (and other volume-based variables going forward) to millimeters at export time for direct readability.
+- Built, debugged, and ran the GEE script for max/min temperature extraction, following the same AEZ/per-year structure. Used true seasonal extremes (max of monthly tmax, min of monthly tmin) for the seasonal aggregate, rather than an average.
+- Verified the temperature output the same way, confirming Kelvin-to-Celsius conversion and sensible values per zone/month.
+- Reorganized the GitHub repo's raster outputs into `raster_prep/precipitation/` and `raster_prep/temperature/` subfolders 
+- Next: soil moisture and soil temperature (both directly available from ERA5-Land, same script pattern), then VPD (already scripted, not yet run), then the non-ERA5-Land variables (PDSI, EVI, elevation, soil properties).
+- 
 ### 2026-07-27
 - Started Step 2 of the workflow: GEE raster preparation, independent of the still-blocked point dataset restart.
 - Reviewed Stella's older GEE variable-extraction code as a reference. 
