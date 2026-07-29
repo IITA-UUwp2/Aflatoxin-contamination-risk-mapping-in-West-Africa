@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ghana Aflatoxin 2013 Dataset</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+  :root{
+    --maize: #1b5e20;      /* dark green */
+    --groundnut: #6d1b1b;  /* deep maroon */
+    --unknown: #6b6b6b;
+    --panel-bg: #ffffff;
+    --sidebar-w: 240px;
+    --accent: #37b673;
+    --sidebar-bg-top: #123a35;
+    --sidebar-bg-bottom: #0a201d;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; height:100%; font-family: "Segoe UI", Roboto, Arial, sans-serif; }
+
+  #app { display:flex; height:100vh; width:100vw; overflow:hidden; }
+
+  /* ---------- LEFT SIDEBAR ---------- */
+  #sidebar {
+    width: var(--sidebar-w);
+    min-width: var(--sidebar-w);
+    background: linear-gradient(160deg, var(--sidebar-bg-top) 0%, var(--sidebar-bg-bottom) 100%);
+    color: #eaf3ea;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 12px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease;
+  }
+  #sidebar h1 {
+    font-size: 15px;
+    margin: 0 0 2px 0;
+    font-weight: 600;
+    line-height: 1.3;
+  }
+  #sidebar .subtitle {
+    font-size: 11px;
+    color: #9db6a3;
+    margin-bottom: 16px;
+  }
+  .sb-section {
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .sb-section:last-of-type { border-bottom: none; }
+  .sb-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #9db6a3;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+
+  /* toggle rows */
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 7px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    background: rgba(255,255,255,0.04);
+  }
+  .toggle-row .tlabel { display:flex; align-items:center; gap:8px; font-size:12.5px; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; border:1px solid rgba(255,255,255,0.5); }
+  .dot.maize { background: var(--maize); }
+  .dot.groundnut { background: var(--groundnut); }
+
+  .switch { position: relative; display:inline-block; width:34px; height:19px; flex-shrink:0; }
+  .switch input { opacity:0; width:0; height:0; }
+  .slider { position:absolute; cursor:pointer; inset:0; background:#4a4a4a; transition:.2s; border-radius:19px; }
+  .slider:before { position:absolute; content:""; height:14px; width:14px; left:3px; bottom:2.5px; background:white; transition:.2s; border-radius:50%; }
+  input:checked + .slider { background: var(--accent); }
+  input:checked + .slider:before { transform: translateX(15px); }
+
+  select, input[type=text] {
+    width:100%;
+    padding:7px 8px;
+    border-radius:6px;
+    border:1px solid rgba(255,255,255,0.15);
+    background:#1d2f24;
+    color:#eaf3ea;
+    font-size:12.5px;
+    outline:none;
+  }
+  select:focus, input[type=text]:focus { border-color: var(--accent); }
+
+  .stat-line { font-size:11.5px; color:#c3d6c9; margin-top:8px; line-height:1.5; }
+  .stat-line b { color:#fff; }
+
+  .legend-item { display:flex; align-items:center; gap:8px; font-size:11.5px; margin-bottom:5px; color:#c3d6c9; }
+
+  .reset-btn {
+    margin-top:6px;
+    width:100%;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.15);
+    color:#eaf3ea;
+    padding:6px 8px;
+    border-radius:6px;
+    font-size:11.5px;
+    cursor:pointer;
+  }
+  .reset-btn:hover { background: rgba(255,255,255,0.14); }
+
+  /* ---------- MAP ---------- */
+  #map-wrap { position:relative; flex:1; height:100vh; }
+  #map { position:absolute; inset:0; }
+
+  /* ---------- RIGHT DETAIL PANEL ---------- */
+  #detail-panel {
+    position:absolute;
+    top:0; right:0; height:100%;
+    width:380px;
+    background: var(--panel-bg);
+    box-shadow: -3px 0 14px rgba(0,0,0,0.25);
+    transform: translateX(100%);
+    transition: transform 0.22s ease;
+    z-index: 1500;
+    display:flex;
+    flex-direction:column;
+  }
+  #detail-panel.open { transform: translateX(0); }
+
+  #resizer {
+    position:absolute;
+    left:-5px; top:0; bottom:0;
+    width:10px;
+    cursor: ew-resize;
+    z-index: 1600;
+  }
+  #resizer:hover, #resizer.dragging { background: rgba(46,125,50,0.25); }
+
+  #panel-header {
+    padding: 14px 16px 10px 20px;
+    border-bottom: 1px solid #e6e6e6;
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    gap:8px;
+    flex-shrink:0;
+  }
+  #panel-header h2 { margin:0; font-size:16px; color:#1b3a1e; }
+  #panel-header .type-badge {
+    display:inline-block;
+    margin-top:4px;
+    font-size:11px;
+    padding:2px 8px;
+    border-radius:10px;
+    color:#fff;
+  }
+  #panel-close {
+    background:none; border:none; font-size:20px; line-height:1; cursor:pointer; color:#666; padding:2px 6px;
+  }
+  #panel-close:hover { color:#000; }
+
+  #panel-body { padding: 10px 20px 24px 20px; overflow-y:auto; flex:1; }
+
+  .info-section { margin-bottom: 16px; }
+  .info-section h3 {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #6b7d6e;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 4px;
+    margin: 0 0 8px 0;
+  }
+  .kv-grid { display:grid; grid-template-columns: 1fr 1fr; gap: 6px 10px; }
+  .kv { font-size: 12.5px; color:#333; }
+  .kv .k { color:#888; font-size:11px; display:block; }
+  .kv .v { font-weight:600; color:#1a1a1a; }
+
+  details.months-toggle summary {
+    cursor:pointer; font-size:12.5px; color: var(--accent); font-weight:600; margin-bottom:6px;
+    outline:none;
+  }
+  table.months-table { width:100%; border-collapse:collapse; font-size:10.5px; }
+  table.months-table th, table.months-table td {
+    padding:4px 5px; text-align:right; border-bottom:1px solid #f0f0f0; white-space:nowrap;
+  }
+  table.months-table th:first-child, table.months-table td:first-child { text-align:left; }
+  table.months-table th { color:#888; font-weight:600; background:#fafafa; position:sticky; top:0; }
+  .months-scroll { max-height:260px; overflow:auto; border:1px solid #eee; border-radius:6px; margin-top:6px; }
+
+  /* leaflet layer control tweak */
+  .leaflet-control-layers { font-size:12.5px; }
+
+  /* custom popup (small hover-ish) not used; we rely on side panel */
+  .leaflet-popup-content-wrapper { display:none; }
+
+  #search-box { margin-top:8px; }
+
+  ::-webkit-scrollbar { width:8px; height:8px; }
+  ::-webkit-scrollbar-thumb { background:#c7c7c7; border-radius:4px; }
+  #sidebar::-webkit-scrollbar-thumb { background:#2a5c50; }
+
+  /* ---------- MOBILE MENU BUTTON & OVERLAY ---------- */
+  #menu-toggle {
+    display: none;
+    position: absolute;
+    top: 12px; left: 12px;
+    z-index: 2000;
+    width: 38px; height: 38px;
+    border-radius: 8px;
+    border: none;
+    background: var(--sidebar-bg-top);
+    color: #eaf3ea;
+    font-size: 18px;
+    align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    cursor: pointer;
+  }
+  #sidebar-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 999;
+  }
+  #sidebar-overlay.show { display: block; }
+
+  /* ---------- RESPONSIVE BREAKPOINTS ---------- */
+  @media (max-width: 900px) {
+    #menu-toggle { display: flex; }
+
+    #sidebar {
+      position: fixed;
+      top: 0; left: 0; height: 100%;
+      width: min(80vw, 300px);
+      min-width: 0;
+      transform: translateX(-100%);
+      padding-top: 56px;
+    }
+    #sidebar.open { transform: translateX(0); }
+
+    #detail-panel { width: 100% !important; }
+    #resizer { display: none; }
+  }
+
+  @media (max-width: 480px) {
+    #panel-header { padding: 12px 12px 8px 16px; }
+    #panel-body { padding: 8px 14px 20px 14px; }
+    .kv-grid { grid-template-columns: 1fr 1fr; gap: 5px 8px; }
+    table.months-table { font-size: 9.5px; }
+  }
+
+  @media (max-height: 480px) and (orientation: landscape) {
+    #sidebar { padding-top: 50px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <button id="menu-toggle" title="Menu">&#9776;</button>
+  <div id="sidebar-overlay"></div>
+
+  <!-- LEFT SIDEBAR -->
+  <div id="sidebar">
+    <h1>Ghana Aflatoxin 2013 Dataset</h1>
+    <div class="subtitle">Maize &amp; groundnut sample points</div>
+
+    <div class="sb-section">
+      <div class="sb-label">Crop layers</div>
+      <div class="toggle-row">
+        <span class="tlabel"><span class="dot maize"></span>Maize</span>
+        <label class="switch">
+          <input type="checkbox" id="toggle-maize" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <span class="tlabel"><span class="dot groundnut"></span>Groundnut</span>
+        <label class="switch">
+          <input type="checkbox" id="toggle-groundnut" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Filter by location</div>
+      <select id="region-select">
+        <option value="">All regions</option>
+      </select>
+      <div style="height:6px;"></div>
+      <select id="village-select">
+        <option value="">All villages</option>
+      </select>
+      <div id="search-box">
+        <input type="text" id="sample-search" placeholder="Search sample code...">
+      </div>
+      <button class="reset-btn" id="reset-filters">Reset filters</button>
+    </div>
+
+    <div class="sb-section">
+      <div class="sb-label">Legend</div>
+      <div class="legend-item"><span class="dot maize"></span>Maize sample</div>
+      <div class="legend-item"><span class="dot groundnut"></span>Groundnut sample</div>
+      <div class="legend-item"><span class="dot" style="background:var(--unknown);border-color:rgba(255,255,255,.5)"></span></div>
+    </div>
+
+    <div class="sb-section" style="border-bottom:none;">
+      <div class="sb-label">Summary</div>
+      <div class="stat-line" id="stats">Loading data...</div>
+    </div>
+  </div>
+
+  <!-- MAP -->
+  <div id="map-wrap">
+    <div id="map"></div>
+
+    <!-- RIGHT DETAIL PANEL -->
+    <div id="detail-panel">
+      <div id="resizer"></div>
+      <div id="panel-header">
+        <div>
+          <h2 id="panel-title">Sample</h2>
+          <span class="type-badge" id="panel-type-badge"></span>
+        </div>
+        <button id="panel-close" title="Close">&times;</button>
+      </div>
+      <div id="panel-body"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+
+  var DATA_URL = 'data.json';
+  var COLORS = { Maize: '#1b5e20', Groundnut: '#6d1b1b', Unknown: '#6b6b6b' };
+
+  // ---------------- MAP SETUP ----------------
+  var map = L.map('map', { zoomControl: true }).setView([7.9, -1.2], 7);
+
+  var baseLayers = {
+    "OpenStreetMap": L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors', maxZoom: 19
+    }),
+    "Light (Carto)": L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19, subdomains: 'abcd'
+    }),
+    "Dark (Carto)": L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; OpenStreetMap &copy; CARTO', maxZoom: 19, subdomains: 'abcd'
+    }),
+    "Satellite (Esri)": L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics', maxZoom: 19
+    }),
+    "Terrain (OpenTopoMap)": L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+      attribution: 'Map data: &copy; OpenStreetMap contributors, SRTM | Map style: &copy; OpenTopoMap', maxZoom: 17
+    })
+  };
+
+  baseLayers["OpenStreetMap"].addTo(map);
+  L.control.layers(baseLayers, null, { position: 'topright', collapsed: true }).addTo(map);
+  L.control.scale({ position: 'bottomright' }).addTo(map);
+
+  var maizeLayer = L.layerGroup().addTo(map);
+  var groundnutLayer = L.layerGroup().addTo(map);
+  var unknownLayer = L.layerGroup().addTo(map);
+
+  // ---------------- STATE ----------------
+  var allData = [];
+  var markerIndex = []; // { point, marker }
+  var currentRegion = '';
+  var currentVillage = '';
+  var currentSearch = '';
+  var showMaize = true;
+  var showGroundnut = true;
+
+  // ---------------- DETAIL PANEL ----------------
+  var panel = document.getElementById('detail-panel');
+  var panelBody = document.getElementById('panel-body');
+  var panelTitle = document.getElementById('panel-title');
+  var panelBadge = document.getElementById('panel-type-badge');
+
+  function fmt(v, digits){
+    if (v === null || v === undefined || v === '') return '&mdash;';
+    if (typeof v === 'number'){
+      if (Number.isInteger(v)) return String(v);
+      return v.toFixed(digits === undefined ? 2 : digits);
+    }
+    return String(v);
+  }
+
+  function kv(label, value){
+    return '<div class="kv"><span class="k">' + label + '</span><span class="v">' + value + '</span></div>';
+  }
+
+  function buildMonthsTable(months){
+    if (!months || !months.length) return '<div style="font-size:12px;color:#999;">No climate data available.</div>';
+    var rows = months.map(function(m){
+      return '<tr>' +
+        '<td>' + (m.Month || '').slice(0,3) + '</td>' +
+        '<td>' + fmt(m['AirTemp_\u00b0C'],1) + '</td>' +
+        '<td>' + fmt(m['SoilTemp_\u00b0C'],1) + '</td>' +
+        '<td>' + fmt(m['RH_%'],1) + '</td>' +
+        '<td>' + fmt(m['Rainfall_mm_day'],1) + '</td>' +
+        '<td>' + fmt(m['WindSpeed_m/s'],1) + '</td>' +
+        '<td>' + fmt(m['SurfacePressur_hPa'],0) + '</td>' +
+        '</tr>';
+    }).join('');
+    return '<div class="months-scroll"><table class="months-table">' +
+      '<thead><tr><th>Mo</th><th>Air&deg;C</th><th>Soil&deg;C</th><th>RH%</th><th>Rain mm</th><th>Wind m/s</th><th>Pressure</th></tr></thead>' +
+      '<tbody>' + rows + '</tbody></table></div>';
+  }
+
+  function openPanel(p){
+    var type = typeOf(p);
+    panelTitle.textContent = p.sampleCode || 'Sample';
+    panelBadge.textContent = type;
+    panelBadge.style.background = COLORS[type] || COLORS.Unknown;
+
+    var html = '';
+
+    html += '<div class="info-section"><h3>Location</h3><div class="kv-grid">' +
+      kv('Region', fmt(p.region)) +
+      kv('District', fmt(p.district)) +
+      kv('Village', fmt(p.village)) +
+      kv('AEZ', fmt(p.aez)) +
+      kv('Elevation (m)', fmt(p.elevation)) +
+      kv('Latitude', fmt(p.lat,5)) +
+      kv('Longitude', fmt(p.lon,5)) +
+      kv('Year', fmt(p.year)) +
+      '</div></div>';
+
+    html += '<div class="info-section"><h3>Sample info</h3><div class="kv-grid">' +
+      kv('Sample code', fmt(p.sampleCode)) +
+      kv('Crop type', type) +
+      kv('Storage method', fmt(p.storageMethod)) +
+      kv('Isolate ID', fmt(p.isolateId)) +
+      kv('Isolate No.', fmt(p.isolateNo)) +
+      kv('Row ID', fmt(p.rowId)) +
+      '</div></div>';
+
+    html += '<div class="info-section"><h3>Soil properties</h3><div class="kv-grid">' +
+      kv('Soil pH', fmt(p.soilPh)) +
+      kv('Clay (%)', fmt(p.clay)) +
+      kv('Nitrogen', fmt(p.nitrogen)) +
+      kv('Organic carbon', fmt(p.organicCarbon)) +
+      '</div></div>';
+
+    html += '<div class="info-section"><h3>Aflatoxin &amp; fungal load</h3><div class="kv-grid">' +
+      kv('B1 (Bs)', fmt(p.b1Bs)) +
+      kv('B2 (Bs)', fmt(p.b2Bs)) +
+      kv('G1 (Bs)', fmt(p.g1Bs)) +
+      kv('G2 (Bs)', fmt(p.g2Bs)) +
+      kv('Total aflatoxin (Bs)', fmt(p.totalAflatoxinBs)) +
+      kv('CFU/mL', fmt(p.cfuMl)) +
+      kv('CFU/g', fmt(p.cfuG)) +
+      kv('B1 (Bi)', fmt(p.b1Bi)) +
+      kv('B2/B1', fmt(p.b2B1)) +
+      kv('G1/B1', fmt(p.g1B1)) +
+      kv('G2/B1', fmt(p.g2B1)) +
+      kv('Total B/B1', fmt(p.totalBB1)) +
+      kv('Total G/B1', fmt(p.totalGB1)) +
+      kv('Total aflatoxin (B1)', fmt(p.totalAflatoxinB1)) +
+      '</div></div>';
+
+    html += '<div class="info-section"><details class="months-toggle"><summary>Show monthly climate data (12 months)</summary>' +
+      buildMonthsTable(p.months) +
+      '</details></div>';
+
+    panelBody.innerHTML = html;
+    panel.classList.add('open');
+  }
+
+  document.getElementById('panel-close').addEventListener('click', function(){
+    panel.classList.remove('open');
+  });
+
+  // ---------------- MOBILE SIDEBAR DRAWER ----------------
+  (function(){
+    var sidebar = document.getElementById('sidebar');
+    var menuToggle = document.getElementById('menu-toggle');
+    var overlay = document.getElementById('sidebar-overlay');
+
+    function openSidebar(){
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
+    }
+    function closeSidebar(){
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    }
+    menuToggle.addEventListener('click', function(){
+      if (sidebar.classList.contains('open')) closeSidebar();
+      else openSidebar();
+    });
+    overlay.addEventListener('click', closeSidebar);
+
+    // auto-close the drawer after picking a location filter on small screens
+    ['region-select','village-select'].forEach(function(id){
+      document.getElementById(id).addEventListener('change', function(){
+        if (window.innerWidth <= 900) closeSidebar();
+      });
+    });
+  })();
+
+  // resizer for the right panel
+  (function(){
+    var resizer = document.getElementById('resizer');
+    var dragging = false;
+    var startX, startWidth;
+
+    resizer.addEventListener('mousedown', function(e){
+      dragging = true;
+      resizer.classList.add('dragging');
+      startX = e.clientX;
+      startWidth = panel.getBoundingClientRect().width;
+      document.body.style.userSelect = 'none';
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', function(e){
+      if (!dragging) return;
+      var delta = startX - e.clientX;
+      var newWidth = Math.min(Math.max(startWidth + delta, 280), Math.min(900, window.innerWidth - 60));
+      panel.style.width = newWidth + 'px';
+    });
+
+    window.addEventListener('mouseup', function(){
+      if (!dragging) return;
+      dragging = false;
+      resizer.classList.remove('dragging');
+      document.body.style.userSelect = '';
+    });
+  })();
+
+  // ---------------- MARKERS ----------------
+  function typeOf(p){
+    if (p.sampleType === 'Maize') return 'Maize';
+    if (p.sampleType === 'Groundnut') return 'Groundnut';
+    // fall back to the sample code prefix when sampleType wasn't recorded
+    var code = (p.sampleCode || '').toUpperCase();
+    if (code.indexOf('GHM') === 0) return 'Maize';
+    if (code.indexOf('GHG') === 0) return 'Groundnut';
+    return 'Unknown';
+  }
+
+  function passesFilter(p){
+    if (currentRegion && p.region !== currentRegion) return false;
+    if (currentVillage && p.village !== currentVillage) return false;
+    if (currentSearch && (!p.sampleCode || p.sampleCode.toLowerCase().indexOf(currentSearch) === -1)) return false;
+    return true;
+  }
+
+  function layerFor(type){
+    if (type === 'Maize') return maizeLayer;
+    if (type === 'Groundnut') return groundnutLayer;
+    return unknownLayer;
+  }
+
+  function typeVisible(type){
+    if (type === 'Maize') return showMaize;
+    if (type === 'Groundnut') return showGroundnut;
+    return true; // unknown type always shown if it passes filters
+  }
+
+  function buildMarkers(){
+    markerIndex.forEach(function(entry){
+      layerFor(entry.type).removeLayer(entry.marker);
+    });
+    markerIndex = [];
+
+    allData.forEach(function(p){
+      if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
+      var type = typeOf(p);
+      var marker = L.circleMarker([p.lat, p.lon], {
+        radius: 4.5,
+        weight: 1,
+        color: '#ffffff',
+        fillColor: COLORS[type],
+        fillOpacity: 0.9,
+        opacity: 0.9
+      });
+      marker.on('click', function(){ openPanel(p); });
+      markerIndex.push({ point: p, marker: marker, type: type });
+    });
+
+    refreshVisibility();
+  }
+
+  function refreshVisibility(){
+    markerIndex.forEach(function(entry){
+      var lg = layerFor(entry.type);
+      var shouldShow = typeVisible(entry.type) && passesFilter(entry.point);
+      var isOn = lg.hasLayer(entry.marker);
+      if (shouldShow && !isOn) lg.addLayer(entry.marker);
+      if (!shouldShow && isOn) lg.removeLayer(entry.marker);
+    });
+    updateStats();
+  }
+
+  function updateStats(){
+    var visible = markerIndex.filter(function(e){
+      return typeVisible(e.type) && passesFilter(e.point);
+    });
+    var maizeCount = visible.filter(function(e){ return e.type === 'Maize'; }).length;
+    var gnCount = visible.filter(function(e){ return e.type === 'Groundnut'; }).length;
+    var unkCount = visible.filter(function(e){ return e.type === 'Unknown'; }).length;
+    document.getElementById('stats').innerHTML =
+      '<b>' + visible.length + '</b> of ' + allData.length + ' samples shown<br>' +
+      'Maize: <b>' + maizeCount + '</b> &nbsp;|&nbsp; Groundnut: <b>' + gnCount + '</b>' +
+      (unkCount ? '<br>Unrecorded type: <b>' + unkCount + '</b>' : '');
+  }
+
+  // ---------------- FILTER CONTROLS ----------------
+  var regionSelect = document.getElementById('region-select');
+  var villageSelect = document.getElementById('village-select');
+
+  function populateSelectors(){
+    var regions = Array.from(new Set(allData.map(function(p){ return p.region; }).filter(Boolean))).sort();
+    regions.forEach(function(r){
+      var opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      regionSelect.appendChild(opt);
+    });
+    populateVillages();
+  }
+
+  function populateVillages(){
+    var current = villageSelect.value;
+    villageSelect.innerHTML = '<option value="">All villages</option>';
+    var pool = currentRegion ? allData.filter(function(p){ return p.region === currentRegion; }) : allData;
+    var villages = Array.from(new Set(pool.map(function(p){ return p.village; }).filter(Boolean))).sort();
+    villages.forEach(function(v){
+      var opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      villageSelect.appendChild(opt);
+    });
+    if (villages.indexOf(current) !== -1) villageSelect.value = current;
+    else currentVillage = '';
+  }
+
+  function zoomToFiltered(){
+    var visible = markerIndex.filter(function(e){
+      return typeVisible(e.type) && passesFilter(e.point);
+    });
+    if (!visible.length) return;
+    var bounds = L.latLngBounds(visible.map(function(e){ return e.marker.getLatLng(); }));
+    map.fitBounds(bounds.pad(0.25), { maxZoom: 13 });
+  }
+
+  regionSelect.addEventListener('change', function(){
+    currentRegion = regionSelect.value;
+    currentVillage = '';
+    populateVillages();
+    refreshVisibility();
+    zoomToFiltered();
+  });
+
+  villageSelect.addEventListener('change', function(){
+    currentVillage = villageSelect.value;
+    refreshVisibility();
+    zoomToFiltered();
+  });
+
+  document.getElementById('sample-search').addEventListener('input', function(e){
+    currentSearch = e.target.value.trim().toLowerCase();
+    refreshVisibility();
+  });
+
+  document.getElementById('toggle-maize').addEventListener('change', function(e){
+    showMaize = e.target.checked;
+    refreshVisibility();
+  });
+
+  document.getElementById('toggle-groundnut').addEventListener('change', function(e){
+    showGroundnut = e.target.checked;
+    refreshVisibility();
+  });
+
+  document.getElementById('reset-filters').addEventListener('click', function(){
+    currentRegion = ''; currentVillage = ''; currentSearch = '';
+    regionSelect.value = ''; document.getElementById('sample-search').value = '';
+    populateVillages();
+    showMaize = true; showGroundnut = true;
+    document.getElementById('toggle-maize').checked = true;
+    document.getElementById('toggle-groundnut').checked = true;
+    refreshVisibility();
+    map.setView([7.9, -1.2], 7);
+  });
+
+  window.addEventListener('resize', function(){
+    map.invalidateSize();
+  });
+
+  // ---------------- LOAD DATA ----------------
+  document.getElementById('stats').textContent = 'Loading data...';
+
+  fetch(DATA_URL)
+    .then(function(res){
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    })
+    .then(function(json){
+      allData = json;
+      buildMarkers();
+      populateSelectors();
+      updateStats();
+    })
+    .catch(function(err){
+      document.getElementById('stats').innerHTML =
+        '<span style="color:#ff8a80;">Failed to load data.json<br>' + err.message + '</span>';
+      console.error('Error loading data.json:', err);
+    });
+
+})();
+</script>
+
+</body>
+</html>
