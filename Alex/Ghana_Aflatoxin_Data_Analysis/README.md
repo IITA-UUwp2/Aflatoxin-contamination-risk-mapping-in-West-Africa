@@ -8,4 +8,4 @@ The dataset used in this project was collected in **2013**, covering a **single,
 
 This data is intended to support the development of an **early warning system** for aflatoxin contamination, to be built together with the corresponding Nigeria dataset contributed by **Agnes Chisale**.
 
-You can visualise the Ghana data here: [Ghana Aflatoxin 2013 Dataset Spatial Dashboard](https://alex-nyaga.github.io/Ghana-aflatoxin-web_2013_Dataset../)
+You can visualise the Ghana data here: [Ghana Aflatoxin 2013 Dataset Spatial Dashboard](https://alex-nyaga.github.io/Ghana-aflatoxin-web_2013_Dataset_IITA/)
