@@ -1,16 +1,40 @@
-# IITA Internship Work
+\# Aflatoxin Contamination Risk Mapping in West Africa
 
-All work completed during our IITA internship is tracked here,so progress is easy to follow.
 
-## Contributors
 
-- **[agness/](./agness)** — Agness Chisale — GEOAI Aflatoxin Early Warning System (ML-based aflatoxin risk prediction for Nigeria)
-- **[Alex/](./Alex)** — Alex - All the tasks that will be conducted by Alex will be updated here
+\## Overview
 
-## Structure
 
-Each contributor's folder contains their own scripts, data cleaning notes, and documentation. See each folder's README for project-specific details.
 
-## Status
+Aflatoxins are toxic secondary metabolites produced by \*Aspergillus flavus\* and related fungi, contaminating staple crops such as maize under favourable climatic conditions. Exposure poses significant risks to human and animal health, including liver cancer, immune suppression, and impaired growth in children. This repository documents a GeoAI and remote sensing workflow for mapping aflatoxin contamination risk in maize across two West African countries: Nigeria and Ghana.
 
-Both projects are actively in progress. See individual folder READMEs for current status and next steps.
+
+
+The work integrates georeferenced field sample data with satellite-derived climate, soil, and vegetation predictors to model and map spatial variation in aflatoxin contamination risk, in support of early warning and targeted mitigation strategies.
+
+
+
+\## Countries
+
+
+
+\- \*\*\[Nigeria/](./Nigeria)\*\* — Machine learning-based aflatoxin risk prediction using field samples and ERA5-Land climate data extracted per agro-ecological zone and growing season.
+
+\- \*\*\[Ghana/](./Ghana)\*\* — Aflatoxin contamination analysis using field samples and environmental data.
+
+
+
+\## Methodology summary
+
+
+
+Predictor variables (precipitation, temperature, soil moisture, soil temperature, vapor pressure deficit, and others) are extracted from satellite and reanalysis data sources using Google Earth Engine, standardized to a common spatial resolution, and matched to field-collected aflatoxin sample data by year and agro-ecological zone.
+
+
+
+\## Structure
+
+
+
+Each country folder contains its own scripts, extracted data, and documentation. See each folder's README for project-specific methodology and status.
+
