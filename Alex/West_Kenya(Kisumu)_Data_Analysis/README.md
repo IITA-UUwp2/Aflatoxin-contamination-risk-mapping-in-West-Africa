@@ -1,6 +1,6 @@
 ### Field Sites Spatial Mapping and Standardization
 This repository contains a systematic mapping of all locations visited during data collection, along with the standardization procedure applied to the dataset.
-The data was collected between **6th and 12th July 2026** in **Western Kenya**, by a team led by **Senior Geospatial Scientist**.
+The data was collected in July 2026** in **Western Kenya**, by a team led by **Senior Geospatial Scientist**.
 ## GPS Data Structuring -LVB Scoping Study
 ### Source Data
 Raw GPS points were collected as an unstructured `.txt` file containing 28 site locations across the Lake Victoria Basin (LVB) region of Western Kenya, with fields for Name, Latitude, Longitude, and Address separated by inconsistent whitespace.
