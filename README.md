@@ -18,9 +18,9 @@ Countries
 
 
 
-\- \*\*\[Nigeria/](./Nigeria)\*\* : Machine learning-based aflatoxin risk prediction using field samples and ERA5-Land climate data extracted per agro-ecological zone and growing season.
+Nigeria : Machine learning-based aflatoxin risk prediction using field samples and ERA5-Land climate data extracted per agro-ecological zone and growing season.
 
-\- \*\*\[Ghana/](./Ghana)\*\* :Aflatoxin contamination analysis using field samples and environmental data.
+Ghana :Aflatoxin contamination analysis using field samples and environmental data.
 
 
 
