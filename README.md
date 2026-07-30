@@ -1,8 +1,8 @@
-\# Aflatoxin Contamination Risk Mapping in West Africa
+Aflatoxin Contamination Risk Mapping in West Africa
 
 
 
-\## Overview
+Overview
 
 
 
@@ -14,17 +14,17 @@ The work integrates georeferenced field sample data with satellite-derived clima
 
 
 
-\## Countries
+Countries
 
 
 
-\- \*\*\[Nigeria/](./Nigeria)\*\* — Machine learning-based aflatoxin risk prediction using field samples and ERA5-Land climate data extracted per agro-ecological zone and growing season.
+\- \*\*\[Nigeria/](./Nigeria)\*\* : Machine learning-based aflatoxin risk prediction using field samples and ERA5-Land climate data extracted per agro-ecological zone and growing season.
 
-\- \*\*\[Ghana/](./Ghana)\*\* — Aflatoxin contamination analysis using field samples and environmental data.
+\- \*\*\[Ghana/](./Ghana)\*\* :Aflatoxin contamination analysis using field samples and environmental data.
 
 
 
-\## Methodology summary
+Methodology summary
 
 
 
@@ -32,7 +32,7 @@ Predictor variables (precipitation, temperature, soil moisture, soil temperature
 
 
 
-\## Structure
+Structure
 
 
 
