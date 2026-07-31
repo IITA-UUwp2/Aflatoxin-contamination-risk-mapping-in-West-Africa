@@ -1,4 +1,13 @@
 # Daily Updates 
+### 2026-07-31
+-Built and ran the GEE script for AEZ-based static elevation extraction from USGS SRTM. One band per AEZ, clipped to AEZ geometry.
+-Verified elevation output in ArcGIS Pro
+-Built and ran the GEE script for AEZ-based static soil properties extraction from SoilGrids (ISRIC): pH, SOC, and clay (as the texture proxy), top 2 depth layers (0-5cm, 5-15cm) for each. No year loop, same static pattern as elevation.
+-Verified soil properties output in ArcGIS Pro; confirmed SoilGrids stores values as scaled integers (e.g. pH x10) and noted the need to apply the correct scaling factor per property before use in R.
+-Built and ran the GEE script for AEZ-based growing-season EVI extraction from MODIS (MOD13Q1), following the VPD/precipitation pattern (monthly bands + seasonal mean). Added a quality-masking step using the SummaryQA band (masking out anything not flagged 0/good quality) before aggregating, and applied MODIS's x0.0001 scaling factor to convert stored values to real EVI units.
+-Built and ran the GEE script for AEZ-based growing-season PDSI extraction from TerraClimate, same monthly + seasonal structure. TerraClimate provides PDSI directly; applied the x0.01 scaling factor to convert stored values to real PDSI units.
+-All 9 predictor variables are now complete: precipitation, temperature, VPD, soil moisture, soil temperature, elevation, soil properties, EVI, and PDSI.
+Next: run spatial thinning and then move to extraction
 
 ### 2026-07-28
 
